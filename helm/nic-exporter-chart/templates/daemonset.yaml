@@ -1,0 +1,44 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: nic-exporter
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: nic-exporter
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: nic-exporter
+  template:
+    metadata:
+      labels:
+        app: nic-exporter
+      annotations:
+        releasetime: {{ $.Release.Time }}
+    spec:
+      initContainers:
+      - name: label-kube-system-namespace
+        image: quay.io/giantswarm/namespace-labeler
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+      priorityClassName: giantswarm-critical
+      containers:
+      - name: nic-exporter
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        resources:
+          # cpu limits removed so that throttling doesn't cause any unwanted
+          # side-effects to measurements.
+          requests:
+            memory: 75Mi
+          limits:
+            memory: 75Mi
+      serviceAccountName: nic-exporter
+      securityContext:
+        runAsUser: {{ .Values.userID }}
+        runAsGroup: {{ .Values.groupID }}
+      tolerations:
+      # Tolerate all taints for observability
+      - operator: "Exists"
