@@ -12,13 +12,15 @@ const (
 )
 
 type nicCollector struct {
+	hostname   string
 	nicMetrics map[string]*prometheus.Desc
 	iface      string
 }
 
-func newNICCollector(iface string) *nicCollector {
+func newNICCollector(hostname, iface string) *nicCollector {
 	nicCollector := &nicCollector{
-		iface: iface,
+		hostname: hostname,
+		iface:    iface,
 	}
 
 	nicStats, err := ethtool.Stats(iface)
@@ -28,7 +30,7 @@ func newNICCollector(iface string) *nicCollector {
 	nicCollector.nicMetrics = make(map[string]*prometheus.Desc)
 	for label, _ := range nicStats {
 		fqName := prometheus.BuildFQName(nic_metric_namespace, "", label)
-		nicCollector.nicMetrics[label] = prometheus.NewDesc(fqName, fmt.Sprintf("Generated description for metric %#q", label), []string{"iface"}, nil)
+		nicCollector.nicMetrics[label] = prometheus.NewDesc(fqName, fmt.Sprintf("Generated description for metric %#q", label), []string{"hostname", "iface"}, nil)
 	}
 
 	return nicCollector
@@ -46,6 +48,6 @@ func (collector *nicCollector) Collect(ch chan<- prometheus.Metric) {
 	nicStats, _ := ethtool.Stats(collector.iface)
 
 	for label, nicMetric := range collector.nicMetrics {
-		ch <- prometheus.MustNewConstMetric(nicMetric, prometheus.GaugeValue, float64(nicStats[label]), collector.iface)
+		ch <- prometheus.MustNewConstMetric(nicMetric, prometheus.GaugeValue, float64(nicStats[label]), collector.hostname, collector.iface)
 	}
 }

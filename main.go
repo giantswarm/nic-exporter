@@ -23,7 +23,12 @@ func main() {
 		panic(err)
 	}
 
-	nicCollector := newNICCollector(iface)
+	hostname, err := os.Hostname()
+	if err != nil {
+		panic(err)
+	}
+
+	nicCollector := newNICCollector(hostname, iface)
 	prometheus.MustRegister(nicCollector)
 
 	http.Handle("/metrics", promhttp.Handler())
