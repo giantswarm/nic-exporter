@@ -32,6 +32,6 @@ func main() {
 	prometheus.MustRegister(nicCollector)
 
 	http.Handle("/metrics", promhttp.Handler())
-	log.Info("Serving on port :8000")
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	log.Info("Serving on port :10800")
+	log.Fatal(http.ListenAndServe(":10800", nil))
 }

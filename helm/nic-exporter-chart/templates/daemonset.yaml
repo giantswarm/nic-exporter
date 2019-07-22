@@ -18,16 +18,14 @@ spec:
       annotations:
         releasetime: {{ $.Release.Time }}
     spec:
-      initContainers:
-      - name: label-kube-system-namespace
-        image: quay.io/giantswarm/namespace-labeler
-        securityContext:
-          runAsUser: 1000
-          runAsGroup: 1000
       priorityClassName: giantswarm-critical
+      hostNetwork: true
       containers:
       - name: nic-exporter
         image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        env:
+        - name: INTERFACE_NAME
+          value: {{ .Values.iface }}
         resources:
           # cpu limits removed so that throttling doesn't cause any unwanted
           # side-effects to measurements.

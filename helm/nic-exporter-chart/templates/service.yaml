@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nic-exporter
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: nic-exporter
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/scheme: "http"
+spec:
+  ports:
+    - port: {{ .Values.port }}
+  selector:
+    app: nic-exporter
