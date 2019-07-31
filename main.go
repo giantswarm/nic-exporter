@@ -31,6 +31,9 @@ func main() {
 	nicCollector := newNICCollector(hostname, iface)
 	prometheus.MustRegister(nicCollector)
 
+	nstatCollector := newNstatCollector(hostname)
+	prometheus.MustRegister(nstatCollector)
+
 	http.Handle("/metrics", promhttp.Handler())
 	log.Info("Serving on port :10800")
 	log.Fatal(http.ListenAndServe(":10800", nil))
