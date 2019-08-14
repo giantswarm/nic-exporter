@@ -1,40 +1,85 @@
 package main
 
 import (
-	"net/http"
+	"flag"
+	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
+	"github.com/giantswarm/exporterkit"
+	"github.com/giantswarm/micrologger"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/log"
-	"github.com/safchain/ethtool"
+
+	"github.com/giantswarm/nic-exporter/nic"
+	"github.com/giantswarm/nic-exporter/nstat"
 )
 
+var (
+	iface string
+)
+
+func init() {
+	flag.StringVar(&iface, "iface", "eth0", "Interface name to retrieve stats from")
+}
+
 func main() {
-
-	// retrieve interface name fro env
-	iface := os.Getenv("INTERFACE_NAME")
-	if iface == "" {
-		panic(errors.New("Environment variable INTERFACE_NAME can not be empty"))
-	}
-	_, err := ethtool.BusInfo(iface)
-	if err != nil {
-		panic(err)
+	if len(os.Args) > 1 && (os.Args[1] == "version" || os.Args[1] == "--help") {
+		return
 	}
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		panic(err)
+	flag.Parse()
+
+	var err error
+
+	var logger micrologger.Logger
+	{
+		logger, err = micrologger.New(micrologger.Config{})
+		if err != nil {
+			panic(fmt.Sprintf("%#v\n", err))
+		}
 	}
 
-	nicCollector := newNICCollector(hostname, iface)
-	prometheus.MustRegister(nicCollector)
+	var nicCollector prometheus.Collector
+	{
+		c := nic.Config{
+			Logger: logger,
 
-	nstatCollector := newNstatCollector(hostname)
-	prometheus.MustRegister(nstatCollector)
+			IFace: iface,
+		}
 
-	http.Handle("/metrics", promhttp.Handler())
-	log.Info("Serving on port :10800")
-	log.Fatal(http.ListenAndServe(":10800", nil))
+		nicCollector, err = nic.New(c)
+		if err != nil {
+			panic(fmt.Sprintf("%#v\n", err))
+		}
+	}
+
+	var nstatCollector prometheus.Collector
+	{
+
+		c := nstat.Config{
+			Logger: logger,
+		}
+
+		nstatCollector, err = nstat.New(c)
+		if err != nil {
+			panic(fmt.Sprintf("%#v\n", err))
+		}
+	}
+
+	var exporter *exporterkit.Exporter
+	{
+		c := exporterkit.Config{
+			Collectors: []prometheus.Collector{
+				nicCollector,
+				nstatCollector,
+			},
+			Logger: logger,
+		}
+
+		exporter, err = exporterkit.New(c)
+		if err != nil {
+			panic(fmt.Sprintf("%#v\n", err))
+		}
+	}
+
+	exporter.Run()
 }
