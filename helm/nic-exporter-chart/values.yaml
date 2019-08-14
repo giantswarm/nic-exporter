@@ -1,0 +1,12 @@
+name: nic-exporter
+namespace: monitoring
+
+userID: 1000
+groupID: 1000
+
+port: 10800
+
+image:
+  registry: quay.io
+  repository: giantswarm/nic-exporter
+  tag: latest
