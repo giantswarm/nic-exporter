@@ -6,8 +6,6 @@ groupID: 1000
 
 port: 10800
 
-iface: eth0
-
 image:
   registry: quay.io
   repository: giantswarm/nic-exporter

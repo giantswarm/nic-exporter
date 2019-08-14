@@ -23,9 +23,6 @@ spec:
       containers:
       - name: nic-exporter
         image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        env:
-        - name: INTERFACE_NAME
-          value: {{ .Values.iface }}
         resources:
           # cpu limits removed so that throttling doesn't cause any unwanted
           # side-effects to measurements.
