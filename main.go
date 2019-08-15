@@ -68,6 +68,7 @@ func main() {
 	var exporter *exporterkit.Exporter
 	{
 		c := exporterkit.Config{
+			Address: "http://0.0.0.0:10800",
 			Collectors: []prometheus.Collector{
 				nicCollector,
 				nstatCollector,
