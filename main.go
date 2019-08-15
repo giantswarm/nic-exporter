@@ -13,6 +13,10 @@ import (
 	"github.com/giantswarm/nic-exporter/nstat"
 )
 
+const (
+	address = "http://0.0.0.0:10800"
+)
+
 var (
 	iface string
 )
@@ -68,7 +72,7 @@ func main() {
 	var exporter *exporterkit.Exporter
 	{
 		c := exporterkit.Config{
-			Address: "http://0.0.0.0:10800",
+			Address: address,
 			Collectors: []prometheus.Collector{
 				nicCollector,
 				nstatCollector,
